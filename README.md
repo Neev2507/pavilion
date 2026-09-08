@@ -25,7 +25,7 @@ Pavilion is a real-time fantasy cricket auction app for all-time Test cricket pl
 
 3. **Run the schema**
 
-   Open the Supabase project's **SQL Editor**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql), and run it. This creates the `rooms`, `participants`, `auction_state`, and `bids` tables and enables Realtime on all four.
+   Open the Supabase project's **SQL Editor**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql), and run it. This creates the `rooms`, `participants`, `auction_state`, `bids`, and `messages` tables and enables Realtime on all five. (If you set up an older version of this project, run the files in [`supabase/migrations/`](supabase/migrations/) in order instead, to bring an existing database up to date without losing data.)
 
 4. **Fill in your environment variables**
 
@@ -53,12 +53,13 @@ Pavilion is a real-time fantasy cricket auction app for all-time Test cricket pl
 ## How to play
 
 1. **Create a room** — enter a display name and hit "Create Room." You'll land in a lobby with a 6-character room code.
-2. **Share the code** — send the room code or the "Copy invite link" URL to friends. Each friend enters the code and their own display name to join.
-3. **Configure settings (host only)** — before starting, the host picks the purse per team (₹50/100/200 Cr), squad size (11/15/18), shot clock length (10/15/20/30s), and which player tiers are in the pool (all players, Legends & Greats only, or Legends only). Everyone else sees these live but can't change them.
-4. **Start the auction** — once at least 2 players have joined, the host hits "Start Auction." There's no manual nomination — every eligible player (given the tier setting) is queued automatically: all Batters first, then All-rounders, then Bowlers, then Wicket-keepers, randomised within each group. The first player goes under the hammer immediately.
-5. **Bid** — everyone has the shot clock's worth of time to bid on the current player using the quick bid chips. Every bid resets the clock. You can't bid so much that you wouldn't have enough purse left to fill your remaining squad slots at minimum price.
+2. **Share the code** — send the room code or the "Copy link" URL to friends. Each friend enters the code and their own display name to join.
+3. **Configure settings (host only)** — before starting, the host picks the purse per team (₹100–200 Cr), squad size (11/15/18), shot clock length (10–60s), and the queue order (fully random, or grouped by category — Batters, then Bowlers, then All-rounders, then Wicket-keepers, randomised within each group). Everyone else sees these live but can't change them. There's also a lobby chat tab with emoji reactions.
+4. **Start the auction** — once at least 2 players have joined, the host hits "Start auction." There's no manual nomination — the entire player pool is queued automatically per the order setting, and the first player goes under the hammer immediately.
+5. **Bid** — everyone has the shot clock's worth of time to bid on the current player with the big bid button, which always shows the next valid bid amount. Every bid resets the clock. You can't bid so much that you wouldn't have enough purse left to fill your remaining squad slots at minimum price. The host can pause the clock or end the round early; "Skip" is just a personal pass and doesn't affect the clock.
 6. **Sold or unsold** — when the clock runs out, the player is sold to the highest bidder (or goes unsold if nobody bid), and the next player in the queue comes up automatically.
-7. **Final squads** — once every participant has filled their squad (or the player pool runs out, whichever comes first), the room moves to a final squads screen showing everyone's roster, total spend, and remaining purse.
+7. **Round 2 (if needed)** — once the queue runs out, if any players went unsold, everyone moves to a selection screen to pick which unsold players they'd like to see auctioned again. Once every participant hits "Ready," a new queue is built from everyone's picks (grouped by category) and Round 2 begins.
+8. **Final squads** — once every participant has filled their squad, or there are no more players to auction, the room moves to a final squads screen showing everyone's roster, total spend, and remaining purse.
 
 ## Deploy to Vercel
 

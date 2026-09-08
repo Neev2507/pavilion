@@ -28,3 +28,11 @@ const COUNTRY_FLAGS: Record<string, string> = {
 export function countryFlag(country: string): string {
   return COUNTRY_FLAGS[country] ?? '🏏'
 }
+
+// "Thomas Aspinwall" -> "TA", "Neev" -> "NE"
+export function getInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return '?'
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return (words[0][0] + words[1][0]).toUpperCase()
+}

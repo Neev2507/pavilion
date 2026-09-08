@@ -1,11 +1,10 @@
 'use client'
 
-import { Room, PlayerTierFilter } from '@/types'
-import Card from '@/components/ui/Card'
+import { Room, PlayerOrderMode } from '@/types'
 import { cn } from '@/lib/utils'
 
 type SettingsPatch = Partial<
-  Pick<Room, 'purse_size' | 'squad_size' | 'shot_clock_seconds' | 'player_tier_filter'>
+  Pick<Room, 'purse_size' | 'squad_size' | 'shot_clock_seconds' | 'player_order_mode'>
 >
 
 interface RoomSettingsProps {
@@ -14,115 +13,115 @@ interface RoomSettingsProps {
   onChange: (patch: SettingsPatch) => void
 }
 
-const PURSE_OPTIONS: { label: string; value: number }[] = [
-  { label: '₹50 Cr', value: 5000 },
+const PURSE_OPTIONS = [
   { label: '₹100 Cr', value: 10000 },
+  { label: '₹125 Cr', value: 12500 },
+  { label: '₹150 Cr', value: 15000 },
+  { label: '₹175 Cr', value: 17500 },
   { label: '₹200 Cr', value: 20000 },
 ]
 
-const SQUAD_SIZE_OPTIONS: { label: string; value: number }[] = [
-  { label: '11', value: 11 },
-  { label: '15', value: 15 },
-  { label: '18', value: 18 },
+const SQUAD_SIZE_OPTIONS = [11, 15, 18]
+
+const SHOT_CLOCK_OPTIONS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+
+const ORDER_OPTIONS: { label: string; value: PlayerOrderMode }[] = [
+  { label: 'Random', value: 'random' },
+  { label: 'By Category', value: 'category' },
 ]
 
-const SHOT_CLOCK_OPTIONS: { label: string; value: number }[] = [
-  { label: '10s', value: 10 },
-  { label: '15s', value: 15 },
-  { label: '20s', value: 20 },
-  { label: '30s', value: 30 },
-]
-
-const TIER_OPTIONS: { label: string; value: PlayerTierFilter }[] = [
-  { label: 'All players', value: 'all' },
-  { label: 'Legends & Greats only', value: 'legends_greats' },
-  { label: 'Legends only', value: 'legends_only' },
-]
-
-function OptionRow<T extends string | number>({
+function Select({
   label,
-  options,
   value,
   disabled,
-  onSelect,
+  onChange,
+  children,
 }: {
   label: string
-  options: { label: string; value: T }[]
-  value: T
+  value: string | number
   disabled: boolean
-  onSelect: (value: T) => void
+  onChange: (value: string) => void
+  children: React.ReactNode
 }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
-      <div className="flex flex-wrap gap-2">
-        {options.map((option) => {
-          const active = option.value === value
-          return (
-            <button
-              key={String(option.value)}
-              type="button"
-              disabled={disabled}
-              onClick={() => onSelect(option.value)}
-              className={cn(
-                'min-h-[40px] rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-150',
-                active
-                  ? 'border-accent bg-accent/20 text-accent'
-                  : 'border-card-border bg-background text-text-secondary',
-                !disabled && !active && 'hover:border-accent/50 hover:text-text-primary',
-                disabled && 'cursor-not-allowed opacity-60'
-              )}
-            >
-              {option.label}
-            </button>
-          )
-        })}
-      </div>
+      <select
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        className={cn(
+          'min-h-[44px] rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-text-primary transition-colors duration-150',
+          'focus:border-accent focus:outline-none',
+          disabled && 'cursor-not-allowed opacity-60'
+        )}
+      >
+        {children}
+      </select>
     </div>
   )
 }
 
 export default function RoomSettings({ room, isHost, onChange }: RoomSettingsProps) {
   return (
-    <Card padding="lg" className="flex w-full flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">
-          Auction settings
-        </h2>
-        {!isHost && <span className="text-xs text-text-secondary">Set by host</span>}
+    <div className="flex w-full flex-col gap-4">
+      <p className="text-xs text-text-secondary">
+        Editable until the auction starts{!isHost && ' — set by the host'}
+      </p>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Select
+          label="Purse"
+          value={room.purse_size}
+          disabled={!isHost}
+          onChange={(v) => onChange({ purse_size: Number(v) })}
+        >
+          {PURSE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </Select>
+
+        <Select
+          label="Squad"
+          value={room.squad_size}
+          disabled={!isHost}
+          onChange={(v) => onChange({ squad_size: Number(v) })}
+        >
+          {SQUAD_SIZE_OPTIONS.map((n) => (
+            <option key={n} value={n}>
+              {n} players
+            </option>
+          ))}
+        </Select>
+
+        <Select
+          label="Timer"
+          value={room.shot_clock_seconds}
+          disabled={!isHost}
+          onChange={(v) => onChange({ shot_clock_seconds: Number(v) })}
+        >
+          {SHOT_CLOCK_OPTIONS.map((n) => (
+            <option key={n} value={n}>
+              {n}s
+            </option>
+          ))}
+        </Select>
+
+        <Select
+          label="Order"
+          value={room.player_order_mode}
+          disabled={!isHost}
+          onChange={(v) => onChange({ player_order_mode: v as PlayerOrderMode })}
+        >
+          {ORDER_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </Select>
       </div>
-
-      <OptionRow
-        label="Purse per team"
-        options={PURSE_OPTIONS}
-        value={room.purse_size}
-        disabled={!isHost}
-        onSelect={(value) => onChange({ purse_size: value })}
-      />
-
-      <OptionRow
-        label="Squad size"
-        options={SQUAD_SIZE_OPTIONS}
-        value={room.squad_size}
-        disabled={!isHost}
-        onSelect={(value) => onChange({ squad_size: value })}
-      />
-
-      <OptionRow
-        label="Shot clock"
-        options={SHOT_CLOCK_OPTIONS}
-        value={room.shot_clock_seconds}
-        disabled={!isHost}
-        onSelect={(value) => onChange({ shot_clock_seconds: value })}
-      />
-
-      <OptionRow
-        label="Player tiers"
-        options={TIER_OPTIONS}
-        value={room.player_tier_filter}
-        disabled={!isHost}
-        onSelect={(value) => onChange({ player_tier_filter: value })}
-      />
-    </Card>
+    </div>
   )
 }

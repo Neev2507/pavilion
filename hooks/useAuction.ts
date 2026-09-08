@@ -15,6 +15,9 @@ interface UseAuctionResult {
   loading: boolean
   placeBid: (amount: number) => Promise<void>
   resolveAuction: () => Promise<void>
+  pause: () => Promise<void>
+  resume: () => Promise<void>
+  skipPlayer: () => Promise<void>
 }
 
 function sleep(ms: number) {
@@ -62,7 +65,11 @@ export function useAuction(roomId: string): UseAuctionResult {
               setAuctionState(null)
               return
             }
-            setAuctionState(payload.new as AuctionState)
+            // Merge rather than replace, in case a large jsonb column
+            // elsewhere in the row gets omitted from this payload.
+            setAuctionState((prev) =>
+              prev ? { ...prev, ...(payload.new as Partial<AuctionState>) } : (payload.new as AuctionState)
+            )
           }
         )
         .on(
@@ -84,55 +91,79 @@ export function useAuction(roomId: string): UseAuctionResult {
     }
   }, [roomId])
 
-  const placeBid = useCallback(
-    async (amount: number) => {
-      if (!auctionState || !auctionState.current_player_id) return
-      if (amount <= auctionState.current_bid) return
+  const placeBid = useCallback(async (amount: number) => {
+    if (!auctionState || !auctionState.current_player_id) return
+    if (auctionState.paused) return
+    if (amount <= auctionState.current_bid) return
 
-      const supabase = createClient()
-      const userId = getUserId()
-      const displayName = getDisplayName()
+    const supabase = createClient()
+    const userId = getUserId()
+    const displayName = getDisplayName()
 
-      const [{ data: participant }, { data: roomData }] = await Promise.all([
-        supabase
-          .from('participants')
-          .select('*')
-          .eq('room_id', roomId)
-          .eq('user_id', userId)
-          .maybeSingle(),
-        supabase.from('rooms').select('*').eq('id', roomId).maybeSingle(),
-      ])
+    if (auctionState.current_bidder_id === userId) return
 
-      if (!participant || !roomData) return
-
-      const squadSlotsLeft = roomData.squad_size - (participant.squad as Player[]).length
-      if (squadSlotsLeft <= 0) return
-      if (!canAffordBid(amount, participant.purse_remaining, squadSlotsLeft)) return
-      if (auctionState.current_bidder_id === userId) return
-
-      const clockEndsAt = new Date(Date.now() + roomData.shot_clock_seconds * 1000).toISOString()
-
-      await supabase
-        .from('auction_state')
-        .update({
-          current_bid: amount,
-          current_bidder_id: userId,
-          current_bidder_name: displayName,
-          clock_ends_at: clockEndsAt,
-          updated_at: new Date().toISOString(),
-        })
+    const [{ data: participant }, { data: roomData }] = await Promise.all([
+      supabase
+        .from('participants')
+        .select('*')
         .eq('room_id', roomId)
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase.from('rooms').select('*').eq('id', roomId).maybeSingle(),
+    ])
 
-      await supabase.from('bids').insert({
-        room_id: roomId,
-        player_id: auctionState.current_player_id,
-        user_id: userId,
-        display_name: displayName,
-        amount,
+    if (!participant || !roomData) return
+
+    const squadSlotsLeft = roomData.squad_size - (participant.squad as Player[]).length
+    if (squadSlotsLeft <= 0) return
+
+    if (!canAffordBid(amount, participant.purse_remaining, squadSlotsLeft)) return
+
+    const clockEndsAt = new Date(Date.now() + roomData.shot_clock_seconds * 1000).toISOString()
+
+    await supabase
+      .from('auction_state')
+      .update({
+        current_bid: amount,
+        current_bidder_id: userId,
+        current_bidder_name: displayName,
+        clock_ends_at: clockEndsAt,
+        updated_at: new Date().toISOString(),
       })
-    },
-    [auctionState, roomId]
-  )
+      .eq('room_id', roomId)
+
+    await supabase.from('bids').insert({
+      room_id: roomId,
+      player_id: auctionState.current_player_id,
+      user_id: userId,
+      display_name: displayName,
+      amount,
+    })
+  }, [auctionState, roomId])
+
+  const pause = useCallback(async () => {
+    if (!auctionState || !auctionState.clock_ends_at || auctionState.paused) return
+    const supabase = createClient()
+    const remaining = Math.max(
+      0,
+      Math.ceil((new Date(auctionState.clock_ends_at).getTime() - Date.now()) / 1000)
+    )
+    await supabase
+      .from('auction_state')
+      .update({ paused: true, paused_seconds_left: remaining })
+      .eq('room_id', roomId)
+  }, [auctionState, roomId])
+
+  const resume = useCallback(async () => {
+    if (!auctionState || !auctionState.paused) return
+    const supabase = createClient()
+    const remaining = auctionState.paused_seconds_left ?? 0
+    const clockEndsAt = new Date(Date.now() + remaining * 1000).toISOString()
+    await supabase
+      .from('auction_state')
+      .update({ paused: false, paused_seconds_left: null, clock_ends_at: clockEndsAt })
+      .eq('room_id', roomId)
+  }, [auctionState, roomId])
 
   const resolveAuction = useCallback(async () => {
     if (!auctionState) return
@@ -181,8 +212,15 @@ export function useAuction(roomId: string): UseAuctionResult {
         .eq('room_id', roomId)
     }
 
-    const nextIndex = roomData.current_index + 1
-    await supabase.from('rooms').update({ current_index: nextIndex }).eq('id', roomId)
+    const unsoldPlayers = wasSold
+      ? (roomData.unsold_players as string[])
+      : [...(roomData.unsold_players as string[]), auctionState.current_player_id as string]
+
+    const nextIndex = roomData.queue_index + 1
+    await supabase
+      .from('rooms')
+      .update({ queue_index: nextIndex, unsold_players: unsoldPlayers })
+      .eq('id', roomId)
 
     await sleep(wasSold ? 3000 : 2000)
 
@@ -196,9 +234,24 @@ export function useAuction(roomId: string): UseAuctionResult {
       allParticipants.length > 0 &&
       allParticipants.every((p) => (p.squad as Player[]).length >= roomData.squad_size)
 
-    const playerOrder = roomData.player_order as string[]
-    const nextPlayer = allSquadsFull ? null : players.find((p) => p.id === playerOrder[nextIndex])
+    const playerQueue = roomData.player_queue as string[]
+    const queueExhausted = nextIndex >= playerQueue.length
 
+    if (allSquadsFull) {
+      await supabase.from('rooms').update({ status: 'finished' }).eq('id', roomId)
+      return
+    }
+
+    if (queueExhausted) {
+      if (roomData.round === 1 && unsoldPlayers.length > 0) {
+        await supabase.from('rooms').update({ status: 'round2_selection' }).eq('id', roomId)
+      } else {
+        await supabase.from('rooms').update({ status: 'finished' }).eq('id', roomId)
+      }
+      return
+    }
+
+    const nextPlayer = players.find((p) => p.id === playerQueue[nextIndex])
     if (!nextPlayer) {
       await supabase.from('rooms').update({ status: 'finished' }).eq('id', roomId)
       return
@@ -212,5 +265,29 @@ export function useAuction(roomId: string): UseAuctionResult {
       .eq('room_id', roomId)
   }, [auctionState, roomId])
 
-  return { auctionState, bids, loading, placeBid, resolveAuction }
+  const skipPlayer = useCallback(async () => {
+    if (!auctionState || !auctionState.current_player_id) return
+    if (auctionState.current_bidder_id) return // bidding has started, skip is no longer available
+    const userId = getUserId()
+    if (auctionState.skips.includes(userId)) return
+
+    const supabase = createClient()
+    const updatedSkips = [...auctionState.skips, userId]
+
+    await supabase
+      .from('auction_state')
+      .update({ skips: updatedSkips, updated_at: new Date().toISOString() })
+      .eq('room_id', roomId)
+
+    const { count } = await supabase
+      .from('participants')
+      .select('id', { count: 'exact', head: true })
+      .eq('room_id', roomId)
+
+    if (count !== null && count > 0 && updatedSkips.length >= count) {
+      await resolveAuction()
+    }
+  }, [auctionState, roomId, resolveAuction])
+
+  return { auctionState, bids, loading, placeBid, resolveAuction, pause, resume, skipPlayer }
 }

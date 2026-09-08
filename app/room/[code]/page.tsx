@@ -5,14 +5,17 @@ import { useRouter } from 'next/navigation'
 import { useRoom } from '@/hooks/useRoom'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
-import Card from '@/components/ui/Card'
 import RoomSettings from '@/components/room/RoomSettings'
-import { getUserId } from '@/lib/utils'
-import { buildPlayerOrder, buildBiddingState } from '@/lib/auction-logic'
+import ParticipantGrid from '@/components/room/ParticipantGrid'
+import ChatPanel from '@/components/room/ChatPanel'
+import { getUserId, cn } from '@/lib/utils'
+import { buildPlayerQueue, buildBiddingState } from '@/lib/auction-logic'
 import { Room, Player } from '@/types'
 import playersData from '@/data/players.json'
 
 const players = playersData as Player[]
+
+type Tab = 'settings' | 'chat'
 
 export default function LobbyPage({ params }: { params: { code: string } }) {
   const { code } = params
@@ -22,6 +25,7 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
   const [userId, setUserId] = useState('')
   const [starting, setStarting] = useState(false)
   const [copied, setCopied] = useState<'code' | 'link' | null>(null)
+  const [tab, setTab] = useState<Tab>('settings')
 
   useEffect(() => {
     const id = getUserId()
@@ -35,10 +39,14 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
   useEffect(() => {
     if (room?.status === 'auction') {
       router.push(`/room/${code}/auction`)
+    } else if (room?.status === 'round2_selection') {
+      router.push(`/room/${code}/selection`)
     } else if (room?.status === 'finished') {
       router.push(`/room/${code}/squads`)
     }
   }, [room?.status, code, router])
+
+  const isHost = room?.host_id === userId
 
   async function handleCopyCode() {
     await navigator.clipboard.writeText(code.toUpperCase())
@@ -64,8 +72,8 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
 
     const supabase = createClient()
 
-    const playerOrder = buildPlayerOrder(players, room.player_tier_filter)
-    const firstPlayer = players.find((p) => p.id === playerOrder[0])
+    const playerQueue = buildPlayerQueue(players, room.player_order_mode)
+    const firstPlayer = players.find((p) => p.id === playerQueue[0])
 
     // Settings may have changed after participants joined with the old
     // defaults, so reset everyone's purse to match the final settings.
@@ -80,7 +88,7 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
 
     await supabase
       .from('rooms')
-      .update({ player_order: playerOrder, current_index: 0 })
+      .update({ player_queue: playerQueue, queue_index: 0, unsold_players: [], round: 1 })
       .eq('id', room.id)
 
     if (firstPlayer) {
@@ -112,63 +120,70 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
     )
   }
 
-  const isHost = room.host_id === userId
-
   return (
-    <main className="flex min-h-screen flex-col items-center gap-10 px-4 py-10">
-      <header className="w-full max-w-2xl">
+    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-8 px-4 py-8">
+      <header className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-text-primary">Pavilion</h1>
-      </header>
-
-      <div className="flex flex-col items-center gap-4">
-        <p className="text-sm uppercase tracking-wide text-text-secondary">Room code</p>
-        <p className="font-mono text-5xl font-bold tracking-[0.2em] text-accent">{code.toUpperCase()}</p>
-        <div className="flex gap-3">
-          <Button variant="secondary" size="sm" onClick={handleCopyCode}>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-sm tracking-widest text-accent">{code.toUpperCase()}</span>
+          <Button variant="ghost" size="sm" onClick={handleCopyCode}>
             {copied === 'code' ? 'Copied!' : 'Copy code'}
           </Button>
-          <Button variant="secondary" size="sm" onClick={handleCopyLink}>
-            {copied === 'link' ? 'Copied!' : 'Copy invite link'}
+          <Button variant="ghost" size="sm" onClick={handleCopyLink}>
+            {copied === 'link' ? 'Copied!' : 'Copy link'}
           </Button>
         </div>
-      </div>
+      </header>
 
-      <div className="flex w-full max-w-2xl flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">
-          Players ({participants.length})
-        </h2>
-        {participants.map((p) => (
-          <Card key={p.id} padding="sm" className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="h-2.5 w-2.5 animate-pulse-fast rounded-full bg-accent" />
-              <span className="font-medium text-text-primary">{p.display_name}</span>
-            </div>
-            {p.user_id === room.host_id && (
-              <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
-                Host
-              </span>
+      <ParticipantGrid participants={participants} hostId={room.host_id} />
+
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-2 rounded-xl border border-card-border bg-card p-1">
+          <button
+            onClick={() => setTab('settings')}
+            className={cn(
+              'min-h-[40px] rounded-lg text-sm font-semibold transition-colors duration-150',
+              tab === 'settings' ? 'bg-accent text-[#0a0a0a]' : 'text-text-secondary hover:text-text-primary'
             )}
-          </Card>
-        ))}
-        {participants.length < 2 && (
-          <p className="text-center text-sm text-text-secondary">Waiting for players...</p>
+          >
+            Room Settings
+          </button>
+          <button
+            onClick={() => setTab('chat')}
+            className={cn(
+              'min-h-[40px] rounded-lg text-sm font-semibold transition-colors duration-150',
+              tab === 'chat' ? 'bg-accent text-[#0a0a0a]' : 'text-text-secondary hover:text-text-primary'
+            )}
+          >
+            Chat
+          </button>
+        </div>
+
+        {tab === 'settings' ? (
+          <RoomSettings room={room} isHost={isHost} onChange={handleSettingsChange} />
+        ) : (
+          <div className="h-80">
+            <ChatPanel roomId={room.id} currentUserId={userId} />
+          </div>
         )}
       </div>
 
-      <div className="w-full max-w-2xl">
-        <RoomSettings room={room} isHost={isHost} onChange={handleSettingsChange} />
-      </div>
-
-      {isHost && (
+      <div className="flex flex-col gap-2">
         <Button
           onClick={handleStartAuction}
-          disabled={participants.length < 2}
+          disabled={!isHost || participants.length < 2}
           loading={starting}
           size="lg"
+          className="w-full"
         >
-          Start Auction
+          Start auction
         </Button>
-      )}
+        {participants.length < 2 && (
+          <p className="text-center text-sm text-text-secondary">
+            At least two managers are required to start.
+          </p>
+        )}
+      </div>
     </main>
   )
 }

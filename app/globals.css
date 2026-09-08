@@ -42,3 +42,100 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #222222 #0a0a0a;
 }
+
+/* SOLD overlay: scales down from oversized with a small bounce. */
+@keyframes slam {
+  0% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.92);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-slam {
+  animation: slam 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Gold pulse ring around the bid amount / bid button when a new bid lands. */
+@keyframes shimmer {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(0, 255, 135, 0);
+  }
+}
+.animate-shimmer {
+  animation: shimmer 0.6s ease-out;
+}
+
+/* Current bid number flips into place when it changes. */
+@keyframes numberFlip {
+  0% {
+    transform: rotateX(90deg);
+    opacity: 0;
+  }
+  60% {
+    transform: rotateX(-12deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+.animate-number-flip {
+  display: inline-block;
+  transform-style: preserve-3d;
+  animation: numberFlip 0.35s ease-out;
+}
+
+/* Generic fade-in, used for lobby participant cards and the UNSOLD overlay. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+/* Chat messages slide up from below the feed. */
+@keyframes slideInBottom {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slide-in-bottom {
+  animation: slideInBottom 0.25s ease-out both;
+}
+
+/* New player card entrance. */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-rise-in {
+  animation: riseIn 0.35s ease-out both;
+}

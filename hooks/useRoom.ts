@@ -65,7 +65,11 @@ export function useRoom(code: string): UseRoomResult {
               setRoom(null)
               return
             }
-            setRoom(payload.new as Room)
+            // Merge rather than replace: a large jsonb column (e.g.
+            // player_queue) can be omitted from an UPDATE payload once it's
+            // TOASTed, if that particular write didn't touch it. Merging
+            // keeps whatever value is already known instead of wiping it.
+            setRoom((prev) => (prev ? { ...prev, ...(payload.new as Partial<Room>) } : (payload.new as Room)))
           }
         )
         .on(
@@ -79,8 +83,8 @@ export function useRoom(code: string): UseRoomResult {
                 return [...prev, inserted]
               }
               if (payload.eventType === 'UPDATE') {
-                const updated = payload.new as Participant
-                return prev.map((p) => (p.id === updated.id ? updated : p))
+                const updated = payload.new as Partial<Participant> & { id: string }
+                return prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p))
               }
               if (payload.eventType === 'DELETE') {
                 const deleted = payload.old as Participant

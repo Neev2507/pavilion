@@ -1,4 +1,4 @@
-import { AuctionState, Player, PlayerTierFilter } from '@/types'
+import { AuctionState, Player, PlayerOrderMode } from '@/types'
 
 // Returns true if the user can afford to place newBid.
 // Must have enough left over to still fill remaining squad slots at base price 50L each.
@@ -17,13 +17,9 @@ export function minimumReserve(squadSlotsLeft: number): number {
   return squadSlotsLeft * 50
 }
 
-// Dynamic bid chips based on current bid level.
-export function getBidChips(currentBid: number): number[] {
-  if (currentBid < 100) return [25, 50, 75, 100]
-  if (currentBid < 500) return [50, 100, 200, 500]
-  if (currentBid < 1000) return [100, 200, 500, 1000]
-  return [200, 500, 1000, 2000]
-}
+// Fixed bid increments (in Lakhs) offered as buttons: +₹25L, +₹50L,
+// +₹75L, +₹1Cr, +₹5Cr, each added on top of whatever the current bid is.
+export const BID_INCREMENTS = [25, 50, 75, 100, 500]
 
 // Format Lakhs to display string.
 export function formatPrice(lakhs: number): string {
@@ -36,16 +32,21 @@ export function generateRoomCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase()
 }
 
-const ROLE_ORDER: Player['role'][] = ['Batter', 'All-rounder', 'Bowler', 'Wicket-keeper']
-
-// Restrict the player pool to a tier filter chosen in room settings.
-export function filterPlayersByTier(players: Player[], filter: PlayerTierFilter): Player[] {
-  if (filter === 'legends_only') return players.filter((p) => p.tier === 'Legend')
-  if (filter === 'legends_greats') {
-    return players.filter((p) => p.tier === 'Legend' || p.tier === 'Great')
+// Generic, role-derived playing style line (no per-player data is tracked).
+export function roleBio(role: Player['role']): string {
+  switch (role) {
+    case 'Batter':
+      return 'right-hand bat'
+    case 'Bowler':
+      return 'right-arm fast-medium'
+    case 'All-rounder':
+      return 'right-hand bat | right-arm fast-medium'
+    case 'Wicket-keeper':
+      return 'right-hand bat | wicket-keeper'
   }
-  return players
 }
+
+const CATEGORY_ORDER: Player['role'][] = ['Batter', 'Bowler', 'All-rounder', 'Wicket-keeper']
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items]
@@ -56,16 +57,20 @@ function shuffle<T>(items: T[]): T[] {
   return copy
 }
 
-// Build the fixed auction order for a room: Batters, then All-rounders,
-// then Bowlers, then Wicket-keepers, randomised within each group.
-export function buildPlayerOrder(players: Player[], tierFilter: PlayerTierFilter): string[] {
-  const eligible = filterPlayersByTier(players, tierFilter)
-  const order: string[] = []
-  for (const role of ROLE_ORDER) {
-    const group = shuffle(eligible.filter((p) => p.role === role))
-    order.push(...group.map((p) => p.id))
+// Build the auction queue for a room: either fully shuffled, or grouped
+// Batters -> Bowlers -> All-rounders -> Wicket-keepers (randomised within
+// each group). Either way every eligible player appears exactly once.
+export function buildPlayerQueue(players: Player[], mode: PlayerOrderMode): string[] {
+  if (mode === 'random') {
+    return shuffle(players).map((p) => p.id)
   }
-  return order
+
+  const queue: string[] = []
+  for (const role of CATEGORY_ORDER) {
+    const group = shuffle(players.filter((p) => p.role === role))
+    queue.push(...group.map((p) => p.id))
+  }
+  return queue
 }
 
 // Shape of the auction_state row for putting a player up for bidding.
@@ -83,6 +88,9 @@ export function buildBiddingState(
     current_bidder_id: null,
     current_bidder_name: null,
     clock_ends_at: new Date(Date.now() + shotClockSeconds * 1000).toISOString(),
+    paused: false,
+    paused_seconds_left: null,
+    skips: [],
     phase: 'bidding',
     updated_at: new Date().toISOString(),
   }
