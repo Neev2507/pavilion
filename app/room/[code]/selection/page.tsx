@@ -9,15 +9,9 @@ import { buildPlayerQueue, buildBiddingState, formatPrice } from '@/lib/auction-
 import { Player } from '@/types'
 import playersData from '@/data/players.json'
 import Button from '@/components/ui/Button'
+import { ROLE_BADGE_CLASSES } from '@/lib/role-styles'
 
 const players = playersData as Player[]
-
-const ROLE_COLORS: Record<Player['role'], string> = {
-  Batter: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
-  Bowler: 'bg-red-500/20 text-red-400 border-red-500/40',
-  'All-rounder': 'bg-green-500/20 text-green-400 border-green-500/40',
-  'Wicket-keeper': 'bg-amber/20 text-amber border-amber/40',
-}
 
 export default function SelectionPage({ params }: { params: { code: string } }) {
   const { code } = params
@@ -130,7 +124,9 @@ export default function SelectionPage({ params }: { params: { code: string } }) 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-4 py-10">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-3xl font-bold text-text-primary">Round 2 — Pick players to bring back</h1>
+        <h1 className="type-display text-3xl font-semibold text-text-bright">
+          Round 2 — Pick players to bring back
+        </h1>
         <p className="text-text-secondary">
           Select the unsold players you want to auction again. Once everyone is ready, Round 2
           begins.
@@ -144,8 +140,8 @@ export default function SelectionPage({ params }: { params: { code: string } }) 
             className={cn(
               'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors duration-150',
               p.round2_ready
-                ? 'border-accent/40 bg-accent/20 text-accent'
-                : 'border-card-border bg-card text-text-secondary'
+                ? 'border-signal-green/40 bg-signal-green/10 text-signal-green'
+                : 'border-border-1 bg-surface-1 text-text-secondary'
             )}
           >
             {p.round2_ready ? '✓' : '…'} {p.display_name}
@@ -154,7 +150,7 @@ export default function SelectionPage({ params }: { params: { code: string } }) 
       </div>
 
       {unsoldPlayers.length === 0 ? (
-        <p className="text-center text-text-secondary">No unsold players.</p>
+        <p className="text-center text-text-dim">No unsold players.</p>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {unsoldPlayers.map((player) => {
@@ -165,10 +161,10 @@ export default function SelectionPage({ params }: { params: { code: string } }) 
                 onClick={() => toggleSelection(player.id)}
                 disabled={iAmReady}
                 className={cn(
-                  'flex flex-col items-start gap-1.5 rounded-lg border-2 bg-card px-3 py-3 text-left transition-all duration-150',
+                  'flex flex-col items-start gap-1.5 rounded border-2 bg-surface-1 px-3 py-3 text-left transition-all duration-150',
                   selected
                     ? 'scale-[1.02] border-accent bg-accent/10'
-                    : 'border-card-border hover:border-accent/40',
+                    : 'border-border-1 hover:border-accent/40',
                   iAmReady && 'cursor-not-allowed opacity-70'
                 )}
               >
@@ -180,13 +176,13 @@ export default function SelectionPage({ params }: { params: { code: string } }) 
                 </div>
                 <span
                   className={cn(
-                    'rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase',
-                    ROLE_COLORS[player.role]
+                    'rounded-full border px-2 py-0.5 type-label',
+                    ROLE_BADGE_CLASSES[player.role]
                   )}
                 >
                   {player.role}
                 </span>
-                <span className="font-mono text-xs text-text-secondary">
+                <span className="type-mono text-xs text-text-secondary">
                   {formatPrice(player.base_price)}
                 </span>
               </button>
@@ -206,9 +202,7 @@ export default function SelectionPage({ params }: { params: { code: string } }) 
         >
           {iAmReady ? '✓ Ready' : 'Ready'}
         </Button>
-        {!allReady && (
-          <p className="text-sm text-text-secondary">Waiting for others...</p>
-        )}
+        {!allReady && <p className="text-sm text-text-dim">Waiting for others...</p>}
       </div>
     </main>
   )

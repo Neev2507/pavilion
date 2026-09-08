@@ -21,32 +21,28 @@ export default function ParticipantGrid({ participants, hostId }: ParticipantGri
             <div className="relative">
               <div
                 className={
-                  'flex h-16 w-16 items-center justify-center rounded-full border-2 bg-card font-mono text-sm font-bold text-text-primary ' +
-                  (isHost ? 'border-accent' : 'border-card-border')
+                  'flex h-16 w-16 items-center justify-center rounded-full border-2 bg-surface-1 type-mono text-sm font-semibold text-text-primary ' +
+                  (isHost ? 'border-accent' : 'border-border-1')
                 }
               >
                 {getInitials(p.display_name)}
               </div>
-              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-accent" />
+              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-canvas bg-signal-green" />
             </div>
             <p className="max-w-[80px] truncate text-center text-sm font-medium text-text-primary">
               {p.display_name}
             </p>
-            {isHost && (
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
-                Admin
-              </p>
-            )}
+            {isHost && <p className="type-label text-text-dim">Admin</p>}
           </div>
         )
       })}
 
       {Array.from({ length: placeholderCount }).map((_, i) => (
         <div key={`invite-${i}`} className="flex flex-col items-center gap-2">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-card-border text-2xl text-text-secondary">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-border-1 text-2xl text-text-dim">
             +
           </div>
-          <p className="text-sm text-text-secondary">Invite</p>
+          <p className="text-sm text-text-dim">Invite</p>
         </div>
       ))}
     </div>

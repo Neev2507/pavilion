@@ -32,6 +32,20 @@ export function generateRoomCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase()
 }
 
+// Pluralised category label shown in the auction top bar, e.g. "Batters".
+export function categoryLabel(role: Player['role']): string {
+  switch (role) {
+    case 'Batter':
+      return 'Batters'
+    case 'Bowler':
+      return 'Bowlers'
+    case 'All-rounder':
+      return 'All-rounders'
+    case 'Wicket-keeper':
+      return 'Wicket-keepers'
+  }
+}
+
 // Generic, role-derived playing style line (no per-player data is tracked).
 export function roleBio(role: Player['role']): string {
   switch (role) {

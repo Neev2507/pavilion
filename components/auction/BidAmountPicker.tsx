@@ -36,11 +36,11 @@ export default function BidAmountPicker({
             onClick={() => onSelect(increment)}
             disabled={isDisabled}
             className={cn(
-              'min-h-[44px] rounded-lg border font-mono text-sm font-semibold transition-all duration-150',
+              'min-h-[44px] rounded border type-mono text-sm font-medium transition-all duration-150',
               isSelected
-                ? 'border-accent bg-accent/20 text-accent'
-                : 'border-card-border bg-card text-text-primary hover:border-accent/40',
-              isDisabled && 'cursor-not-allowed opacity-30 hover:border-card-border'
+                ? 'border-accent bg-accent/10 text-accent-high'
+                : 'border-border-1 bg-surface-1 text-text-primary hover:border-accent hover:text-accent-high',
+              isDisabled && 'cursor-not-allowed opacity-40 hover:border-border-1 hover:text-text-primary'
             )}
           >
             +{formatPrice(increment)}

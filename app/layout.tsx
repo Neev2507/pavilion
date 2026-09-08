@@ -1,5 +1,13 @@
 import type { Metadata } from 'next'
-import { GeistMono } from 'geist/font/mono'
+import '@fontsource/eb-garamond/400.css'
+import '@fontsource/eb-garamond/500.css'
+import '@fontsource/eb-garamond/600.css'
+import '@fontsource/dm-sans/400.css'
+import '@fontsource/dm-sans/500.css'
+import '@fontsource/dm-sans/600.css'
+import '@fontsource/jetbrains-mono/400.css'
+import '@fontsource/jetbrains-mono/500.css'
+import '@fontsource/jetbrains-mono/600.css'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -14,9 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${GeistMono.variable} bg-background font-sans text-text-primary antialiased`}>
-        {children}
-      </body>
+      <body className="bg-canvas font-sans text-text-primary antialiased">{children}</body>
     </html>
   )
 }

@@ -32,10 +32,8 @@ export default function ChatPanel({ roomId, currentUserId, title, className }: C
     <div className={cn('flex h-full min-h-0 flex-col gap-3', className)}>
       {title && (
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-accent" />
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
-            {title}
-          </h3>
+          <span className="h-2 w-2 rounded-full bg-signal-green" />
+          <h3 className="type-label text-text-dim">{title}</h3>
         </div>
       )}
 
@@ -48,7 +46,7 @@ export default function ChatPanel({ roomId, currentUserId, title, className }: C
               <span
                 className={cn(
                   'font-medium',
-                  m.user_id === currentUserId ? 'text-accent' : 'text-text-primary'
+                  m.user_id === currentUserId ? 'text-accent-high' : 'text-text-primary'
                 )}
               >
                 {m.display_name}
@@ -65,7 +63,7 @@ export default function ChatPanel({ roomId, currentUserId, title, className }: C
           <button
             key={emoji}
             onClick={() => sendMessage(emoji)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-card-border bg-card text-lg transition-transform duration-150 hover:scale-110 active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded border border-border-2 bg-surface-1 text-lg transition-transform duration-150 hover:scale-110 hover:border-accent active:scale-90"
           >
             {emoji}
           </button>
@@ -81,11 +79,11 @@ export default function ChatPanel({ roomId, currentUserId, title, className }: C
             if (e.key === 'Enter') handleSend()
           }}
           placeholder="Type a message..."
-          className="min-h-[40px] flex-1 rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-accent focus:outline-none"
+          className="min-h-[40px] flex-1 rounded border border-border-1 bg-[#120c07] px-3 py-2 text-sm text-text-primary placeholder:text-text-dim focus:border-accent focus:outline-none"
         />
         <button
           onClick={handleSend}
-          className="min-h-[40px] rounded-lg bg-accent px-4 text-sm font-semibold text-[#0a0a0a] transition-transform duration-150 hover:scale-105 active:scale-95"
+          className="min-h-[40px] rounded bg-accent px-4 text-sm font-bold text-canvas transition-colors duration-150 hover:bg-accent-hover active:scale-[0.99]"
         >
           Send
         </button>

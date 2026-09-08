@@ -139,44 +139,44 @@ export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-10 px-4 py-12">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-5xl font-bold tracking-tight text-text-primary">Pavilion</h1>
+        <h1 className="type-display text-5xl font-semibold text-text-bright">Pavilion</h1>
         <p className="text-text-secondary">All-time Test cricket auctions with friends.</p>
       </div>
 
       <div className="grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
         <Card padding="lg" className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold text-text-primary">Create Room</h2>
+          <h2 className="type-display text-lg font-semibold text-text-bright">Create Room</h2>
           <input
             type="text"
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
             placeholder="Display name"
-            className="min-h-[44px] rounded-lg border border-card-border bg-background px-4 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-accent focus:outline-none"
+            className="min-h-[44px] rounded border border-border-1 bg-[#120c07] px-4 py-2 text-sm text-text-primary placeholder:text-text-dim focus:border-accent focus:outline-none"
           />
-          {createError && <p className="text-sm text-error">{createError}</p>}
+          {createError && <p className="text-sm text-signal-red">{createError}</p>}
           <Button onClick={handleCreateRoom} loading={creating} className="w-full">
             Create Room
           </Button>
         </Card>
 
         <Card padding="lg" className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold text-text-primary">Join Room</h2>
+          <h2 className="type-display text-lg font-semibold text-text-bright">Join Room</h2>
           <input
             type="text"
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
             placeholder="Room code"
             maxLength={6}
-            className="min-h-[44px] rounded-lg border border-card-border bg-background px-4 py-2 text-sm uppercase tracking-widest text-text-primary placeholder:text-text-secondary placeholder:normal-case placeholder:tracking-normal focus:border-accent focus:outline-none"
+            className="min-h-[44px] rounded border border-border-1 bg-[#120c07] type-mono px-4 py-2 text-sm uppercase text-text-primary placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-text-dim focus:border-accent focus:outline-none"
           />
           <input
             type="text"
             value={joinName}
             onChange={(e) => setJoinName(e.target.value)}
             placeholder="Display name"
-            className="min-h-[44px] rounded-lg border border-card-border bg-background px-4 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-accent focus:outline-none"
+            className="min-h-[44px] rounded border border-border-1 bg-[#120c07] px-4 py-2 text-sm text-text-primary placeholder:text-text-dim focus:border-accent focus:outline-none"
           />
-          {joinError && <p className="text-sm text-error">{joinError}</p>}
+          {joinError && <p className="text-sm text-signal-red">{joinError}</p>}
           <Button onClick={handleJoinRoom} loading={joining} variant="secondary" className="w-full">
             Join Room
           </Button>

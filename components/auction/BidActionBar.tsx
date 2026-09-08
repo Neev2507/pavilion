@@ -43,14 +43,18 @@ export default function BidActionBar({
         onClick={onConfirm}
         disabled={disabled || selectedIncrement === null}
         className={cn(
-          'flex min-h-[56px] flex-1 items-center justify-center rounded-xl bg-accent font-bold text-[#0a0a0a] transition-all duration-150',
-          'hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100',
+          'flex min-h-[56px] flex-1 items-center justify-center rounded bg-accent font-sans font-bold text-canvas transition-all duration-150',
+          'hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-accent',
           pulse && 'animate-shimmer'
         )}
       >
-        {selectedIncrement !== null
-          ? `Bid ${formatPrice(currentBid + selectedIncrement)}`
-          : 'Select a bid amount'}
+        {selectedIncrement !== null ? (
+          <>
+            Bid <span className="type-mono ml-1.5">{formatPrice(currentBid + selectedIncrement)}</span>
+          </>
+        ) : (
+          'Select a bid amount'
+        )}
       </button>
 
       {showSkip && (
@@ -58,15 +62,15 @@ export default function BidActionBar({
           onClick={onSkip}
           disabled={hasSkipped}
           className={cn(
-            'flex min-h-[56px] w-28 flex-col items-center justify-center gap-0.5 rounded-xl border border-card-border bg-card text-sm font-semibold text-text-secondary transition-all duration-150',
-            'hover:border-accent/50 hover:text-text-primary active:scale-95',
-            hasSkipped && 'cursor-not-allowed border-accent/30 text-accent opacity-80'
+            'flex min-h-[56px] w-28 flex-col items-center justify-center gap-0.5 rounded border border-border-2 bg-surface-1 text-sm font-medium text-text-secondary transition-all duration-150',
+            'hover:border-accent hover:text-accent-high active:scale-[0.99]',
+            hasSkipped && 'cursor-not-allowed text-accent opacity-80 hover:border-border-2'
           )}
         >
           <span className="flex items-center gap-1">
             <span>⏭</span> {hasSkipped ? 'Skipped' : 'Skip'}
           </span>
-          <span className="font-mono text-[10px] text-text-secondary">
+          <span className="type-mono text-[10px] text-text-dim">
             {skipCount}/{totalParticipants}
           </span>
         </button>

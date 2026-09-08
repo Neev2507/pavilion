@@ -6,15 +6,9 @@ import { useRoom } from '@/hooks/useRoom'
 import { createClient } from '@/lib/supabase/client'
 import { formatPrice } from '@/lib/auction-logic'
 import { countryFlag } from '@/lib/utils'
+import { ROLE_BADGE_CLASSES, ROLE_INITIALS } from '@/lib/role-styles'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
-
-const ROLE_INITIALS: Record<string, string> = {
-  Batter: 'B',
-  Bowler: 'Bo',
-  'All-rounder': 'AR',
-  'Wicket-keeper': 'WK',
-}
 
 export default function SquadsPage({ params }: { params: { code: string } }) {
   const { code } = params
@@ -62,7 +56,9 @@ export default function SquadsPage({ params }: { params: { code: string } }) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-8 px-4 py-10">
-      <h1 className="text-center text-3xl font-bold text-text-primary">Final Squads</h1>
+      <h1 className="type-display text-center text-3xl font-semibold text-text-bright">
+        Final Squads
+      </h1>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {participants.map((p) => {
@@ -71,21 +67,21 @@ export default function SquadsPage({ params }: { params: { code: string } }) {
             <Card key={p.id} padding="lg" className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-text-primary">{p.display_name}</h2>
-                <span className="text-xs text-text-secondary">
+                <span className="type-mono text-xs text-text-secondary">
                   {p.squad.length}/{room.squad_size}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div>
-                  <p className="font-mono text-lg font-bold text-accent">{formatPrice(spent)}</p>
-                  <p className="text-xs text-text-secondary">Total spent</p>
+                  <p className="type-mono text-lg font-semibold text-accent">{formatPrice(spent)}</p>
+                  <p className="type-label text-text-dim">Total spent</p>
                 </div>
                 <div>
-                  <p className="font-mono text-lg font-bold text-text-primary">
+                  <p className="type-mono text-lg font-semibold text-text-primary">
                     {formatPrice(p.purse_remaining)}
                   </p>
-                  <p className="text-xs text-text-secondary">Purse remaining</p>
+                  <p className="type-label text-text-dim">Purse remaining</p>
                 </div>
               </div>
 
@@ -95,21 +91,23 @@ export default function SquadsPage({ params }: { params: { code: string } }) {
                   return (
                     <li
                       key={player.id}
-                      className="flex items-center justify-between rounded-lg border border-card-border bg-background px-3 py-2 text-sm"
+                      className="flex items-center justify-between rounded border border-border-1 bg-surface-2 px-3 py-2 text-sm"
                     >
                       <span className="flex items-center gap-2">
                         <span>{countryFlag(player.country)}</span>
-                        <span className="text-text-primary">{player.name}</span>
-                        <span className="rounded-full bg-accent/20 px-1.5 py-0.5 font-mono text-[10px] text-accent">
+                        <span className="type-display font-medium text-text-bright">{player.name}</span>
+                        <span
+                          className={`rounded-full border px-1.5 py-0.5 type-label ${ROLE_BADGE_CLASSES[player.role]}`}
+                        >
                           {ROLE_INITIALS[player.role]}
                         </span>
                       </span>
-                      <span className="font-mono text-text-secondary">{formatPrice(paid)}</span>
+                      <span className="type-mono text-text-secondary">{formatPrice(paid)}</span>
                     </li>
                   )
                 })}
                 {p.squad.length === 0 && (
-                  <li className="text-center text-sm text-text-secondary">No players acquired.</li>
+                  <li className="text-center text-sm text-text-dim">No players acquired.</li>
                 )}
               </ul>
             </Card>

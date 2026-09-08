@@ -7,7 +7,7 @@ import { useAuction } from '@/hooks/useAuction'
 import { useTimer } from '@/hooks/useTimer'
 import { createClient } from '@/lib/supabase/client'
 import { getUserId, getDisplayName, getInitials, cn } from '@/lib/utils'
-import { canAffordBid, formatPrice } from '@/lib/auction-logic'
+import { canAffordBid, formatPrice, categoryLabel } from '@/lib/auction-logic'
 import { Player } from '@/types'
 import playersData from '@/data/players.json'
 import PlayerCard from '@/components/auction/PlayerCard'
@@ -162,11 +162,13 @@ export default function AuctionPage({ params }: { params: { code: string } }) {
 
   return (
     <main className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-card-border px-4 py-3">
+      <header className="flex items-center justify-between border-b border-border-1 px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-accent" />
-          <span className="text-sm font-semibold text-text-primary">
-            Round {room.round} &middot; {room.queue_index + 1}/{room.player_queue.length}
+          <span className="h-2 w-2 rounded-full bg-signal-green" />
+          <span className="type-mono text-sm font-medium text-text-primary">
+            Round {room.round}
+            {currentPlayer && <> &middot; {categoryLabel(currentPlayer.role)}</>} &middot;{' '}
+            {room.queue_index + 1}/{room.player_queue.length}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -180,8 +182,8 @@ export default function AuctionPage({ params }: { params: { code: string } }) {
               </Button>
             </>
           )}
-          <div className="flex items-center gap-2 rounded-full border border-card-border px-2 py-1">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/20 font-mono text-[10px] text-accent">
+          <div className="flex items-center gap-2 rounded-full border border-border-1 px-2 py-1">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/10 type-mono text-[10px] text-accent-high">
               {getInitials(getDisplayName())}
             </div>
             <span className="text-sm text-text-secondary">{getDisplayName()}</span>
@@ -195,7 +197,7 @@ export default function AuctionPage({ params }: { params: { code: string } }) {
         <div className="flex flex-1 flex-col gap-6">
           {auctionState.phase === 'nomination' && (
             <div className="flex flex-1 items-center justify-center">
-              <p className="text-text-secondary">Setting up the auction...</p>
+              <p className="text-text-dim">Setting up the auction...</p>
             </div>
           )}
 
@@ -206,6 +208,7 @@ export default function AuctionPage({ params }: { params: { code: string } }) {
               <BidBox
                 currentBid={auctionState.current_bid}
                 currentBidderName={auctionState.current_bidder_name}
+                isLeadingMe={auctionState.current_bidder_id === userId}
                 secondsLeft={displaySecondsLeft}
                 totalSeconds={room.shot_clock_seconds}
                 paused={auctionState.paused}
@@ -236,25 +239,25 @@ export default function AuctionPage({ params }: { params: { code: string } }) {
           )}
 
           {auctionState.phase === 'sold' && currentPlayer && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3">
-              <p className="animate-slam font-mono text-5xl font-bold text-accent">SOLD!</p>
-              <p className="text-xl font-semibold text-text-primary">{currentPlayer.name}</p>
-              <p className="font-mono text-2xl text-text-secondary">
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded border border-border-1 bg-surface-1">
+              <p className="animate-slam type-display text-5xl font-semibold text-accent">SOLD!</p>
+              <p className="type-display text-xl font-semibold text-text-bright">{currentPlayer.name}</p>
+              <p className="type-mono text-2xl text-text-secondary">
                 {formatPrice(auctionState.current_bid)} to {auctionState.current_bidder_name}
               </p>
             </div>
           )}
 
           {auctionState.phase === 'unsold' && currentPlayer && (
-            <div className="flex flex-1 animate-fade-in flex-col items-center justify-center gap-3 grayscale">
-              <p className="font-mono text-5xl font-bold text-error">UNSOLD</p>
-              <p className="text-xl font-semibold text-text-primary">{currentPlayer.name}</p>
+            <div className="flex flex-1 animate-fade-in flex-col items-center justify-center gap-3 rounded border border-border-1 bg-surface-1">
+              <p className="type-display text-5xl font-semibold text-text-dim">UNSOLD</p>
+              <p className="type-display text-xl font-semibold text-text-dim">{currentPlayer.name}</p>
             </div>
           )}
         </div>
 
         <aside className={cn('flex w-full flex-col lg:w-[300px] lg:shrink-0')}>
-          <div className="flex h-[420px] flex-col rounded-xl border border-card-border bg-card p-4 lg:sticky lg:top-4 lg:h-[calc(100vh-6rem)]">
+          <div className="flex h-[420px] flex-col rounded border border-border-1 bg-surface-1 p-4 lg:sticky lg:top-4 lg:h-[calc(100vh-6rem)]">
             <ChatPanel roomId={room.id} currentUserId={userId} title="Live chat" />
           </div>
         </aside>

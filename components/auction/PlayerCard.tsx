@@ -1,31 +1,25 @@
 import { Player } from '@/types'
 import { countryFlag, cn, getInitials } from '@/lib/utils'
 import { roleBio, formatPrice } from '@/lib/auction-logic'
+import { ROLE_BADGE_CLASSES } from '@/lib/role-styles'
 import Card from '@/components/ui/Card'
 
 interface PlayerCardProps {
   player: Player
 }
 
-const ROLE_COLORS: Record<Player['role'], string> = {
-  Batter: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
-  Bowler: 'bg-red-500/20 text-red-400 border-red-500/40',
-  'All-rounder': 'bg-green-500/20 text-green-400 border-green-500/40',
-  'Wicket-keeper': 'bg-amber/20 text-amber border-amber/40',
-}
-
 export default function PlayerCard({ player }: PlayerCardProps) {
   return (
-    <Card padding="lg" className="flex animate-rise-in flex-col items-center gap-3 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-card-border bg-background font-mono text-lg font-bold text-text-primary">
+    <Card active padding="lg" className="flex animate-rise-in flex-col items-center gap-3 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border-1 bg-surface-2 type-mono text-lg font-semibold text-text-primary">
         {getInitials(player.name)}
       </div>
-      <h2 className="text-2xl font-bold text-text-primary">{player.name}</h2>
+      <h2 className="type-display text-3xl font-semibold text-text-bright">{player.name}</h2>
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide',
-            ROLE_COLORS[player.role]
+            'flex h-[22px] items-center rounded-full border px-3 type-label',
+            ROLE_BADGE_CLASSES[player.role]
           )}
         >
           {player.role}
@@ -34,9 +28,9 @@ export default function PlayerCard({ player }: PlayerCardProps) {
           {countryFlag(player.country)} {player.country}
         </span>
       </div>
-      <p className="text-xs text-text-secondary">{roleBio(player.role)}</p>
-      <p className="text-xs text-text-secondary">
-        BASE PRICE <span className="font-mono text-text-primary">{formatPrice(player.base_price)}</span>
+      <p className="text-xs text-text-dim">{roleBio(player.role)}</p>
+      <p className="type-label text-text-dim">
+        Base price <span className="type-mono text-sm text-text-primary">{formatPrice(player.base_price)}</span>
       </p>
     </Card>
   )

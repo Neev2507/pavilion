@@ -123,9 +123,9 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-8 px-4 py-8">
       <header className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-text-primary">Pavilion</h1>
+        <h1 className="type-display text-xl font-semibold text-text-bright">Pavilion</h1>
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm tracking-widest text-accent">{code.toUpperCase()}</span>
+          <span className="type-mono text-sm text-accent">{code.toUpperCase()}</span>
           <Button variant="ghost" size="sm" onClick={handleCopyCode}>
             {copied === 'code' ? 'Copied!' : 'Copy code'}
           </Button>
@@ -138,12 +138,12 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
       <ParticipantGrid participants={participants} hostId={room.host_id} />
 
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-2 rounded-xl border border-card-border bg-card p-1">
+        <div className="grid grid-cols-2 gap-2 rounded border border-border-1 bg-surface-1 p-1">
           <button
             onClick={() => setTab('settings')}
             className={cn(
-              'min-h-[40px] rounded-lg text-sm font-semibold transition-colors duration-150',
-              tab === 'settings' ? 'bg-accent text-[#0a0a0a]' : 'text-text-secondary hover:text-text-primary'
+              'min-h-[40px] rounded text-sm font-medium transition-colors duration-150',
+              tab === 'settings' ? 'bg-accent text-canvas font-bold' : 'text-text-secondary hover:text-text-primary'
             )}
           >
             Room Settings
@@ -151,8 +151,8 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
           <button
             onClick={() => setTab('chat')}
             className={cn(
-              'min-h-[40px] rounded-lg text-sm font-semibold transition-colors duration-150',
-              tab === 'chat' ? 'bg-accent text-[#0a0a0a]' : 'text-text-secondary hover:text-text-primary'
+              'min-h-[40px] rounded text-sm font-medium transition-colors duration-150',
+              tab === 'chat' ? 'bg-accent text-canvas font-bold' : 'text-text-secondary hover:text-text-primary'
             )}
           >
             Chat
@@ -179,7 +179,7 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
           Start auction
         </Button>
         {participants.length < 2 && (
-          <p className="text-center text-sm text-text-secondary">
+          <p className="text-center text-sm text-text-dim">
             At least two managers are required to start.
           </p>
         )}

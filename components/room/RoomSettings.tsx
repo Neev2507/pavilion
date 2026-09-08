@@ -45,13 +45,13 @@ function Select({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="type-label text-text-dim">{label}</p>
       <select
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
-          'min-h-[44px] rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-text-primary transition-colors duration-150',
+          'min-h-[44px] rounded border border-border-1 bg-surface-2 px-3 py-2 text-sm text-text-primary accent-accent transition-colors duration-150',
           'focus:border-accent focus:outline-none',
           disabled && 'cursor-not-allowed opacity-60'
         )}
@@ -65,7 +65,7 @@ function Select({
 export default function RoomSettings({ room, isHost, onChange }: RoomSettingsProps) {
   return (
     <div className="flex w-full flex-col gap-4">
-      <p className="text-xs text-text-secondary">
+      <p className="text-xs text-text-dim">
         Editable until the auction starts{!isHost && ' — set by the host'}
       </p>
 
