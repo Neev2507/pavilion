@@ -54,10 +54,11 @@ Pavilion is a real-time fantasy cricket auction app for all-time Test cricket pl
 
 1. **Create a room** — enter a display name and hit "Create Room." You'll land in a lobby with a 6-character room code.
 2. **Share the code** — send the room code or the "Copy invite link" URL to friends. Each friend enters the code and their own display name to join.
-3. **Start the auction** — once at least 2 players have joined, the host hits "Start Auction." Turn order is shuffled randomly.
-4. **Nominate & bid** — players take turns nominating an unsold cricketer. Once nominated, everyone has 15 seconds to bid using the quick bid chips. Every bid resets the clock to 15 seconds. You can't bid so much that you wouldn't have enough purse left to fill your remaining squad slots at minimum price.
-5. **Sold or unsold** — when the clock runs out, the player is sold to the highest bidder (or goes unsold if nobody bid), and the turn passes to the next nominator.
-6. **Final squads** — once every participant has filled their squad, the room moves to a final squads screen showing everyone's roster, total spend, and remaining purse.
+3. **Configure settings (host only)** — before starting, the host picks the purse per team (₹50/100/200 Cr), squad size (11/15/18), shot clock length (10/15/20/30s), and which player tiers are in the pool (all players, Legends & Greats only, or Legends only). Everyone else sees these live but can't change them.
+4. **Start the auction** — once at least 2 players have joined, the host hits "Start Auction." There's no manual nomination — every eligible player (given the tier setting) is queued automatically: all Batters first, then All-rounders, then Bowlers, then Wicket-keepers, randomised within each group. The first player goes under the hammer immediately.
+5. **Bid** — everyone has the shot clock's worth of time to bid on the current player using the quick bid chips. Every bid resets the clock. You can't bid so much that you wouldn't have enough purse left to fill your remaining squad slots at minimum price.
+6. **Sold or unsold** — when the clock runs out, the player is sold to the highest bidder (or goes unsold if nobody bid), and the next player in the queue comes up automatically.
+7. **Final squads** — once every participant has filled their squad (or the player pool runs out, whichever comes first), the room moves to a final squads screen showing everyone's roster, total spend, and remaining purse.
 
 ## Deploy to Vercel
 

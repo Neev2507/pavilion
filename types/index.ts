@@ -8,6 +8,8 @@ export interface Player {
   tier: 'Legend' | 'Great' | 'Good'
 }
 
+export type PlayerTierFilter = 'all' | 'legends_greats' | 'legends_only'
+
 export interface Room {
   id: string
   code: string
@@ -15,7 +17,10 @@ export interface Room {
   status: 'lobby' | 'auction' | 'finished'
   purse_size: number
   squad_size: number
-  nomination_index: number
+  shot_clock_seconds: number
+  player_tier_filter: PlayerTierFilter
+  player_order: string[]
+  current_index: number
 }
 
 export interface Participant {
@@ -25,7 +30,6 @@ export interface Participant {
   display_name: string
   purse_remaining: number
   squad: Player[]
-  nomination_order: number
 }
 
 export interface AuctionState {

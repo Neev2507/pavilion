@@ -65,7 +65,6 @@ export default function HomePage() {
         user_id: userId,
         display_name: name,
         purse_remaining: room.purse_size,
-        nomination_order: 0,
       })
 
       if (participantError) {

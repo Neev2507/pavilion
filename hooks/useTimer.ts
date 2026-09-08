@@ -8,30 +8,25 @@ interface UseTimerResult {
 }
 
 export function useTimer(clockEndsAt: string | null): UseTimerResult {
-  const [secondsLeft, setSecondsLeft] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    if (!clockEndsAt) {
-      setSecondsLeft(0)
-      return
-    }
+    if (!clockEndsAt) return
 
-    const endTime = new Date(clockEndsAt).getTime()
-
-    const tick = () => {
-      const remainingMs = endTime - Date.now()
-      const remaining = Math.max(0, Math.ceil(remainingMs / 1000))
-      setSecondsLeft(remaining)
-    }
-
-    tick()
-    const interval = setInterval(tick, 100)
-
+    const interval = setInterval(() => setNow(Date.now()), 100)
     return () => clearInterval(interval)
   }, [clockEndsAt])
 
-  return {
-    secondsLeft,
-    isExpired: clockEndsAt !== null && secondsLeft === 0,
+  if (!clockEndsAt) {
+    return { secondsLeft: 0, isExpired: false }
   }
+
+  // Derived directly from the clockEndsAt prop and a live `now` on every
+  // render, so a brand new clockEndsAt is never judged against a stale
+  // secondsLeft left over from the previous player's countdown reaching 0.
+  const remainingMs = new Date(clockEndsAt).getTime() - now
+  const secondsLeft = Math.max(0, Math.ceil(remainingMs / 1000))
+  const isExpired = remainingMs <= 0
+
+  return { secondsLeft, isExpired }
 }

@@ -6,7 +6,10 @@ create table rooms (
   status text not null default 'lobby', -- lobby | auction | finished
   purse_size bigint not null default 10000, -- stored in Lakhs (₹100 Cr = 10000 L)
   squad_size int not null default 15,
-  nomination_index int not null default 0,
+  shot_clock_seconds int not null default 15,
+  player_tier_filter text not null default 'all', -- all | legends_greats | legends_only
+  player_order jsonb not null default '[]', -- ordered array of player ids for this room's auction
+  current_index int not null default 0, -- pointer into player_order
   created_at timestamptz default now()
 );
 
@@ -18,7 +21,6 @@ create table participants (
   display_name text not null,
   purse_remaining bigint not null default 10000,
   squad jsonb not null default '[]',
-  nomination_order int not null default 0,
   joined_at timestamptz default now(),
   unique(room_id, user_id)
 );

@@ -6,7 +6,13 @@ import { useRoom } from '@/hooks/useRoom'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
+import RoomSettings from '@/components/room/RoomSettings'
 import { getUserId } from '@/lib/utils'
+import { buildPlayerOrder, buildBiddingState } from '@/lib/auction-logic'
+import { Room, Player } from '@/types'
+import playersData from '@/data/players.json'
+
+const players = playersData as Player[]
 
 export default function LobbyPage({ params }: { params: { code: string } }) {
   const { code } = params
@@ -46,38 +52,43 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
     setTimeout(() => setCopied(null), 1500)
   }
 
+  async function handleSettingsChange(patch: Partial<Room>) {
+    if (!room || !isHost) return
+    const supabase = createClient()
+    await supabase.from('rooms').update(patch).eq('id', room.id)
+  }
+
   async function handleStartAuction() {
     if (!room) return
     setStarting(true)
 
     const supabase = createClient()
 
-    const shuffled = [...participants]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-    }
+    const playerOrder = buildPlayerOrder(players, room.player_tier_filter)
+    const firstPlayer = players.find((p) => p.id === playerOrder[0])
 
+    // Settings may have changed after participants joined with the old
+    // defaults, so reset everyone's purse to match the final settings.
     await Promise.all(
-      shuffled.map((p, index) =>
-        supabase.from('participants').update({ nomination_order: index }).eq('id', p.id)
+      participants.map((p) =>
+        supabase
+          .from('participants')
+          .update({ purse_remaining: room.purse_size, squad: [] })
+          .eq('id', p.id)
       )
     )
 
-    await supabase.from('auction_state').upsert(
-      {
-        room_id: room.id,
-        current_player_id: null,
-        current_base_price: 0,
-        current_bid: 0,
-        current_bidder_id: null,
-        current_bidder_name: null,
-        clock_ends_at: null,
-        phase: 'nomination',
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'room_id' }
-    )
+    await supabase
+      .from('rooms')
+      .update({ player_order: playerOrder, current_index: 0 })
+      .eq('id', room.id)
+
+    if (firstPlayer) {
+      await supabase.from('auction_state').upsert(
+        buildBiddingState(room.id, firstPlayer.id, firstPlayer.base_price, room.shot_clock_seconds),
+        { onConflict: 'room_id' }
+      )
+    }
 
     await supabase.from('rooms').update({ status: 'auction' }).eq('id', room.id)
 
@@ -142,6 +153,10 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
         {participants.length < 2 && (
           <p className="text-center text-sm text-text-secondary">Waiting for players...</p>
         )}
+      </div>
+
+      <div className="w-full max-w-2xl">
+        <RoomSettings room={room} isHost={isHost} onChange={handleSettingsChange} />
       </div>
 
       {isHost && (

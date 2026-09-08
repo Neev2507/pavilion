@@ -6,7 +6,7 @@ import { useRoom } from '@/hooks/useRoom'
 import { useAuction } from '@/hooks/useAuction'
 import { useTimer } from '@/hooks/useTimer'
 import { getUserId, getDisplayName } from '@/lib/utils'
-import { getNominator, getSoldPlayerIds, formatPrice } from '@/lib/auction-logic'
+import { formatPrice } from '@/lib/auction-logic'
 import { Player } from '@/types'
 import playersData from '@/data/players.json'
 import PlayerCard from '@/components/auction/PlayerCard'
@@ -14,7 +14,6 @@ import BidChips from '@/components/auction/BidChips'
 import BidFeed from '@/components/auction/BidFeed'
 import PurseBar from '@/components/auction/PurseBar'
 import SquadPanel from '@/components/auction/SquadPanel'
-import NominationPicker from '@/components/auction/NominationPicker'
 import Timer from '@/components/ui/Timer'
 import Card from '@/components/ui/Card'
 
@@ -23,10 +22,8 @@ const players = playersData as Player[]
 export default function AuctionPage({ params }: { params: { code: string } }) {
   const { code } = params
   const router = useRouter()
-  const { room, participants, currentParticipant, loading: roomLoading } = useRoom(code)
-  const { auctionState, bids, nominatePlayer, placeBid, resolveAuction } = useAuction(
-    room?.id ?? ''
-  )
+  const { room, currentParticipant, loading: roomLoading } = useRoom(code)
+  const { auctionState, bids, placeBid, resolveAuction } = useAuction(room?.id ?? '')
   const { secondsLeft, isExpired } = useTimer(auctionState?.clock_ends_at ?? null)
 
   const [userId, setUserId] = useState('')
@@ -53,7 +50,10 @@ export default function AuctionPage({ params }: { params: { code: string } }) {
 
   useEffect(() => {
     if (!isHost) return
-    if (!auctionState || auctionState.phase !== 'bidding') return
+    if (!auctionState) return
+    if (auctionState.phase !== 'bidding') return
+    if (!auctionState.clock_ends_at) return
+    if (!auctionState.current_player_id) return
     if (!isExpired) return
     resolveAuction()
   }, [isHost, isExpired, auctionState, resolveAuction])
@@ -65,11 +65,6 @@ export default function AuctionPage({ params }: { params: { code: string } }) {
       </main>
     )
   }
-
-  const soldPlayerIds = new Set(getSoldPlayerIds(participants))
-  const unsoldPlayers = players.filter((p) => !soldPlayerIds.has(p.id))
-  const nominator = participants.length > 0 ? getNominator(participants, room.nomination_index) : null
-  const isMyTurn = nominator?.user_id === userId
 
   const currentPlayer = auctionState.current_player_id
     ? players.find((p) => p.id === auctionState.current_player_id) ?? null
@@ -87,23 +82,8 @@ export default function AuctionPage({ params }: { params: { code: string } }) {
       </header>
 
       {auctionState.phase === 'nomination' && (
-        <div className="flex flex-1 flex-col gap-4">
-          <Card padding="md" className="text-center">
-            <p className="text-lg font-semibold text-text-primary">
-              {isMyTurn ? 'Your turn to nominate' : `${nominator?.display_name ?? '...'}'s turn to nominate`}
-            </p>
-          </Card>
-
-          {isMyTurn ? (
-            <NominationPicker
-              players={unsoldPlayers}
-              onNominate={(player) => nominatePlayer(player.id, player.base_price)}
-            />
-          ) : (
-            <p className="text-center text-text-secondary">
-              Waiting for {nominator?.display_name ?? 'the next player'} to pick a player...
-            </p>
-          )}
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-text-secondary">Setting up the auction...</p>
         </div>
       )}
 
@@ -116,7 +96,7 @@ export default function AuctionPage({ params }: { params: { code: string } }) {
           />
 
           <div className="flex justify-center">
-            <Timer secondsLeft={secondsLeft} />
+            <Timer secondsLeft={secondsLeft} totalSeconds={room.shot_clock_seconds} />
           </div>
 
           <BidChips
